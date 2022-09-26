@@ -57,8 +57,7 @@ const employee4: Employee = {
   },
 }
 
-const capitalize: (s: string) => string = (s) =>
-  `${s.substring(0, 1).toUpperCase()}${s.substring(1)}`
+const capitalize: (s: string) => string = (s) => `${s.substring(0, 1).toUpperCase()}${s.substring(1)}`
 
 const employee2 = {
   ...employee,
@@ -80,7 +79,8 @@ import { pipe } from 'fp-ts/function'
 import * as S from 'fp-ts/string'
 import * as A from 'fp-ts/Array'
 import * as RA from 'fp-ts/ReadonlyArray'
-import * as LT from 'monocle-ts/lib/Traversal'
+import * as LT from 'monocle-ts/Traversal'
+import * as LI from 'monocle-ts/Iso'
 import { capitalize as capitalizeR } from 'radash'
 
 const capitaliseStrO: (str: string) => O.Option<string> = (str) =>
@@ -147,7 +147,7 @@ console.log(
   JSON.stringify(
     // changeNameFirstCharUppercaseL(employee),
     changeNameUppercaseL(employee),
-//  ^?    
+    //  ^?
     null,
     2
   )
@@ -156,11 +156,44 @@ console.log(
 const employees = [employee, employee3, employee4]
 const traverseUpperCaseNameT = LT.fromTraversable(A.Traversable)<Employee>()
 //    ^?
-const changeNameUppercase = pipe(
-  traverseUpperCaseNameT,
-  LT.modify(changeNameUppercaseL)
-)
+const changeNameUppercase = pipe(traverseUpperCaseNameT, LT.modify(changeNameUppercaseL))
 
-console.log(
-  `Employees: ${JSON.stringify(changeNameUppercase(employees), null, 2)}`
-)
+console.log(`Employees: ${JSON.stringify(changeNameUppercase(employees), null, 2)}`)
+
+// Iso
+type Gender = 'Male' | 'Female'
+type TCandidate = {
+  applicantId: string
+  firstName: string
+  lastName: string
+  gender: Gender
+}
+const candidateOf: (applicantId: string) => (firstName: string) => (lastName: string) => (gender: Gender) => TCandidate =
+  (applicantId) => (firstName) => (lastName) => (gender) => ({
+    applicantId,
+    firstName,
+    lastName,
+    gender,
+  })
+
+type TEmployee = {
+  employeeId: string
+  firstName: string
+  lastName: string
+  gender: Gender
+  onboardDate: Date
+}
+const employeeOf: (
+  employeeId: string
+) => (firstName: string) => (lastName: string) => (gender: Gender) => (onboardDate: Date) => TEmployee =
+  (employeeId) => (firstName) => (lastName) => (gender) => (onboardDate) => ({ employeeId, firstName, lastName, gender, onboardDate })
+
+type Person = TCandidate | TEmployee
+
+const c2e: (employeeId: string) => (onboardDate: Date) => (candidate: TCandidate) => TEmployee = (eId) => (oDate) => (c) =>
+  employeeOf(eId)(c.firstName)(c.lastName)(c.gender)(oDate)
+const e2c: (applicantId: string) => (employee: TEmployee) => TCandidate = (aId) => (e) =>
+  candidateOf(aId)(e.firstName)(e.lastName)(e.gender)
+
+const candidateToEmployeeIso: (candidate: TCandidate) => (employee: TEmployee) => LI.Iso<TCandidate, TEmployee> = (c) => (e) =>
+  LI.iso<TCandidate, TEmployee>(c2e(e.employeeId)(e.onboardDate), e2c(c.applicantId))
