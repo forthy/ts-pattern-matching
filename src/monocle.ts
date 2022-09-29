@@ -79,8 +79,9 @@ import { pipe } from 'fp-ts/function'
 import * as S from 'fp-ts/string'
 import * as A from 'fp-ts/Array'
 import * as RA from 'fp-ts/ReadonlyArray'
-import * as LT from 'monocle-ts/Traversal'
-import * as LI from 'monocle-ts/Iso'
+import * as MT from 'monocle-ts/Traversal'
+import * as ML from 'monocle-ts/Iso'
+import * as MP from 'monocle-ts/Prism'
 import { capitalize as capitalizeR } from 'radash'
 
 const capitaliseStrO: (str: string) => O.Option<string> = (str) =>
@@ -154,15 +155,16 @@ console.log(
 )
 
 const employees = [employee, employee3, employee4]
-const traverseUpperCaseNameT = LT.fromTraversable(A.Traversable)<Employee>()
+const traverseUpperCaseNameT = MT.fromTraversable(A.Traversable)<Employee>()
 //    ^?
-const changeNameUppercase = pipe(traverseUpperCaseNameT, LT.modify(changeNameUppercaseL))
+const changeNameUppercase = pipe(traverseUpperCaseNameT, MT.modify(changeNameUppercaseL))
 
 console.log(`Employees: ${JSON.stringify(changeNameUppercase(employees), null, 2)}`)
 
 // Iso
 type Gender = 'Male' | 'Female'
 type TCandidate = {
+  _tag: 'Candidate'
   applicantId: string
   firstName: string
   lastName: string
@@ -170,6 +172,7 @@ type TCandidate = {
 }
 const candidateOf: (applicantId: string) => (firstName: string) => (lastName: string) => (gender: Gender) => TCandidate =
   (applicantId) => (firstName) => (lastName) => (gender) => ({
+    _tag: 'Candidate',
     applicantId,
     firstName,
     lastName,
@@ -177,23 +180,41 @@ const candidateOf: (applicantId: string) => (firstName: string) => (lastName: st
   })
 
 type TEmployee = {
+  _tag: 'Employee'
   employeeId: string
   firstName: string
   lastName: string
   gender: Gender
   onboardDate: Date
+  spouse: O.Option<string>
 }
-const employeeOf: (
+const singleEmployeeOf: (
   employeeId: string
 ) => (firstName: string) => (lastName: string) => (gender: Gender) => (onboardDate: Date) => TEmployee =
-  (employeeId) => (firstName) => (lastName) => (gender) => (onboardDate) => ({ employeeId, firstName, lastName, gender, onboardDate })
+  (employeeId) => (firstName) => (lastName) => (gender) => (onboardDate) => ({
+    _tag: 'Employee',
+    employeeId,
+    firstName,
+    lastName,
+    gender,
+    onboardDate,
+    spouse: O.none,
+  })
 
+// ISO
 type Person = TCandidate | TEmployee
 
 const c2e: (employeeId: string) => (onboardDate: Date) => (candidate: TCandidate) => TEmployee = (eId) => (oDate) => (c) =>
-  employeeOf(eId)(c.firstName)(c.lastName)(c.gender)(oDate)
+  singleEmployeeOf(eId)(c.firstName)(c.lastName)(c.gender)(oDate)
 const e2c: (applicantId: string) => (employee: TEmployee) => TCandidate = (aId) => (e) =>
   candidateOf(aId)(e.firstName)(e.lastName)(e.gender)
 
-const candidateToEmployeeIso: (candidate: TCandidate) => (employee: TEmployee) => LI.Iso<TCandidate, TEmployee> = (c) => (e) =>
-  LI.iso<TCandidate, TEmployee>(c2e(e.employeeId)(e.onboardDate), e2c(c.applicantId))
+const candidateToEmployeeIso: (candidate: TCandidate) => (employee: TEmployee) => ML.Iso<TCandidate, TEmployee> = (c) => (e) =>
+  ML.iso<TCandidate, TEmployee>(c2e(e.employeeId)(e.onboardDate), e2c(c.applicantId))
+
+// Prism
+const singleEmployeePrism = MP.fromPredicate<TEmployee>((e) => O.isNone(e.spouse))
+//    ^?
+console.log(
+  JSON.stringify(singleEmployeePrism.getOption(singleEmployeeOf('117621')('John')('Doe')('Male')(new Date('2019-01-16'))), null, 2)
+)
