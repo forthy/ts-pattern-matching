@@ -1,47 +1,27 @@
-import { match, P } from 'ts-pattern'
 import * as E from 'fp-ts/Either'
 
-type Door = 2 | 4 | 5
-type Car = { _tag: 'Car'; door: Door }
-type Colour = 'Red' | 'Yellow' | 'White' | 'Black'
-type Bicycle = { _tag: 'Bicycle'; colour: Colour }
+export type Door = 2 | 4 | 5
+export type Car = { _tag: 'Car'; door: Door }
+export type Colour = 'Red' | 'Yellow' | 'White' | 'Black'
+export type Bicycle = { _tag: 'Bicycle'; colour: Colour }
 
-type Vehicle = Car | Bicycle
+export type Vehicle = Car | Bicycle
 
-type Email = string & { _tag: 'Email' }
-//   ^?
-
-const carOf: (door: Door) => Readonly<Car> = (door) => ({ _tag: 'Car', door })
-
-const bicycleOf: (colour: Colour) => Readonly<Bicycle> = (colour) => ({
+export const carOf: (door: Door) => Readonly<Car> = (door) => ({ _tag: 'Car', door })
+export const bicycleOf: (colour: Colour) => Readonly<Bicycle> = (colour) => ({
   _tag: 'Bicycle',
   colour,
 })
 
-const aCar = carOf(5)
-const aBicycle = bicycleOf('Yellow')
-
-const msg = match<Vehicle, string>(aCar)
-  .with({ _tag: 'Car', door: 5 }, () => 'This is a 5-door car')
-  .with(
-    { _tag: 'Car', door: P.select() },
-    (door) => `This car has ${door} door(s)`
-  )
-  .with(
-    { _tag: 'Bicycle', colour: P.select() },
-    (c) => `This bicycle is in ${c.toLowerCase()} colour`
-  )
-  .exhaustive()
-
-console.log(msg)
-
 type SayMsgCommand = { _tag: 'SayMsgCommand'; msg: string }
 
-type FirstName = { _tag: 'FirstName', name: string }
-type LastName = { _tag: 'LastName', name: string }
+// newtype
+type FirstName = string & { _tag: 'FirstName' }
+const firstNameOf: (firstName: string) => FirstName = (firstName) => firstName as FirstName
+type LastName = string & { _tag: 'LastName' }
+const lastNameOf: (lastName: string) => LastName = (lastName) => lastName as LastName
 type Person = { firstName: FirstName; lastName: LastName }
-const personOf: (firstName: FirstName) => (lastName: LastName) => Person =
-  (firstName) => (lastName) => ({ firstName, lastName })
+const personOf: (firstName: FirstName) => (lastName: LastName) => Readonly<Person> = (firstName) => (lastName) => ({ firstName, lastName })
 
 type CreatePersonCommand = {
   _tag: 'CreatePersonCommand'

@@ -1,3 +1,14 @@
+import * as O from 'fp-ts/Option'
+import * as B from 'fp-ts/boolean'
+import { pipe } from 'fp-ts/function'
+import * as S from 'fp-ts/string'
+import * as A from 'fp-ts/Array'
+import * as RA from 'fp-ts/ReadonlyArray'
+import * as MT from 'monocle-ts/Traversal'
+import * as ML from 'monocle-ts/Iso'
+import * as MP from 'monocle-ts/Prism'
+import { capitalize as capitalizeR } from 'radash'
+
 type Street = {
   num: number
   name: string
@@ -73,17 +84,6 @@ const employee2 = {
   },
 }
 
-import * as O from 'fp-ts/Option'
-import * as B from 'fp-ts/boolean'
-import { pipe } from 'fp-ts/function'
-import * as S from 'fp-ts/string'
-import * as A from 'fp-ts/Array'
-import * as RA from 'fp-ts/ReadonlyArray'
-import * as MT from 'monocle-ts/Traversal'
-import * as ML from 'monocle-ts/Iso'
-import * as MP from 'monocle-ts/Prism'
-import { capitalize as capitalizeR } from 'radash'
-
 const capitaliseStrO: (str: string) => O.Option<string> = (str) =>
   pipe(
     O.fromNullable(str),
@@ -148,7 +148,7 @@ console.log(
   JSON.stringify(
     // changeNameFirstCharUppercaseL(employee),
     changeNameUppercaseL(employee),
-    //  ^?
+//  ^?
     null,
     2
   )
