@@ -90,6 +90,7 @@ const capitaliseStrO: (str: string) => O.Option<string> = (str) =>
     O.map((s) => pipe(s, S.trim, capitalizeR))
   )
 
+// DEBUG
 console.log(`Employee 2: ${JSON.stringify(employee2, null, 2)}`)
 
 import { Lens, Optional } from 'monocle-ts'
@@ -144,20 +145,24 @@ const changeNameUppercaseL: (employee: Employee) => Employee = companyL
   .asOptional()
   .modify(capitaliseStr)
 
+// DEBUG
 console.log(
   JSON.stringify(
     // changeNameFirstCharUppercaseL(employee),
     changeNameUppercaseL(employee),
-//  ^?
+    //  ^?
     null,
     2
   )
 )
 
+const streetNameOptional = companyL.compose(addressL).compose(streetL).compose(nameL).asOptional()
+
 const employees = [employee, employee3, employee4]
-const traverseUpperCaseNameT = MT.fromTraversable(A.Traversable)<Employee>()
+const employeesTraverse = MT.fromTraversable(A.Traversable)<Employee>()
 //    ^?
-const changeNameUppercase = pipe(traverseUpperCaseNameT, MT.modify(changeNameUppercaseL))
+const changeNameUppercase = pipe(employeesTraverse, MT.composeOptional(streetNameOptional), MT.modify(capitaliseStr))
+//                                                     ^?                        
 
 console.log(`Employees: ${JSON.stringify(changeNameUppercase(employees), null, 2)}`)
 
