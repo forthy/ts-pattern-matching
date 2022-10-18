@@ -157,6 +157,7 @@ console.log(
 )
 
 const streetNameOptional = companyL.compose(addressL).compose(streetL).compose(nameL).asOptional()
+// const streetOptional = companyL.compose(addressL).compose(streetL).asOptional()
 
 const employees = [employee, employee3, employee4]
 const employeesTraverse = MT.fromTraversable(A.Traversable)<Employee>()
